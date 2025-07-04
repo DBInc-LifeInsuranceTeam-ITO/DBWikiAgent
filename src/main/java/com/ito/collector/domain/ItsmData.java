@@ -9,7 +9,7 @@ public class ItsmData {
     @Id
     private Long id;
 
-    private String systemName; // ← 이 필드가 있어야 해
+    private String systemName; 
 
     public ItsmData() {
     }
@@ -27,7 +27,7 @@ public class ItsmData {
         this.id = id;
     }
 
-    public String getSystemName() {  // ← 이 getter가 꼭 필요해!
+    public String getSystemName() {  
         return systemName;
     }
 
