@@ -1,7 +1,7 @@
 package com.ito.collector.adapter;
 
-import com.ito.collector.domain.ItsmData;
-import com.ito.collector.repository.ItsmViewRepository;
+import com.ito.collector.entity.CmdbAsset;
+import com.ito.collector.repository.CmdbAssetRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -9,13 +9,13 @@ import java.util.List;
 @Component
 public class ItsmDbAdapter {
 
-    private final ItsmViewRepository repository;
+    private final CmdbAssetRepository repository;
 
-    public ItsmDbAdapter(ItsmViewRepository repository) {
+    public ItsmDbAdapter(CmdbAssetRepository repository) {
         this.repository = repository;
     }
 
-    public List<ItsmData> fetch() {
+    public List<CmdbAsset> fetch() {
         return repository.findAll();
     }
 }
