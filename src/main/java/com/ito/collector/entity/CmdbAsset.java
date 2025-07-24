@@ -9,12 +9,13 @@ import jakarta.persistence.Table;
 public class CmdbAsset {
 
     @Id
-    private String ip;
     private String hostname;
+    private String ip;
+    private String vip;
     private String cpu;
     private String mem;
     private String disk;
-    private String bizType;
+    private String workType;
     private String description;
     private String osManager;
     private String mwManager;
@@ -23,14 +24,14 @@ public class CmdbAsset {
     public CmdbAsset() {}
 
 
-    public CmdbAsset(String ip, String hostname, String cpu, String mem, String disk, String bizType, String description) {
-        this.ip = ip;
+    public CmdbAsset(String ip, String hostname, String cpu, String mem, String disk, String workType, String vip) {
         this.hostname = hostname;
+        this.ip = ip;
+        this.vip = vip;
         this.cpu = cpu;
         this.mem = mem;
         this.disk = disk;
-        this.bizType = bizType;
-        this.description = description;
+        this.workType = workType;
     }
 
     // Getter & Setter
@@ -38,8 +39,16 @@ public class CmdbAsset {
         return ip;
     }
 
-    public void setIp(String ip) {
+    public void setVip(String vip) {
         this.ip = ip;
+    }
+
+    public String getVip() {
+        return vip;
+    }
+
+    public void setIp(String vip) {
+        this.vip = vip;
     }
 
     public String getHostname() {
@@ -74,12 +83,12 @@ public class CmdbAsset {
         this.disk = disk;
     }
 
-    public String getBizType() {
-        return bizType;
+    public String getworkType() {
+        return workType;
     }
 
-    public void setBizType(String bizType) {
-        this.bizType = bizType;
+    public void setworkType(String workType) {
+        this.workType = workType;
     }
 
     public String getDescription() {
