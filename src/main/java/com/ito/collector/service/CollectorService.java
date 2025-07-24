@@ -8,8 +8,15 @@ import jakarta.annotation.PostConstruct;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class CollectorService {
@@ -47,6 +54,56 @@ public class CollectorService {
         }
 
         return sb.toString();
+    }
+    public void updateManagersFromExcel(File excelFile) {
+        try (FileInputStream fis = new FileInputStream("src/main/resources/asset-update.xlsx");
+             Workbook workbook = new XSSFWorkbook(fis)) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+
+            for (Row row : sheet) {
+                if (row.getRowNum() == 0) continue; // 헤더 스킵
+
+                String hostname = row.getCell(0).getStringCellValue().trim();
+                String osManager = row.getCell(1).getStringCellValue().trim();
+                String mwManager = row.getCell(2).getStringCellValue().trim();
+
+                CmdbAsset asset = assetRepository.findAll().stream()
+                        .filter(a -> hostname.equals(a.getHostname()))
+                        .findFirst()
+                        .orElse(null);
+
+                if (asset != null) {
+                    boolean changed = false;
+
+                    if (!Objects.equals(asset.getOsManager(), osManager)) {
+                        asset.setOsManager(osManager);
+                        changed = true;
+                    }
+
+                    if (!Objects.equals(asset.getMwManager(), mwManager)) {
+                        asset.setMwManager(mwManager);
+                        changed = true;
+                    }
+
+                    if (changed) {
+                        assetRepository.save(asset);
+                        System.out.println("Updated asset: " + hostname);
+                    }
+                } else {
+                    // 신규 추가
+                    CmdbAsset newAsset = new CmdbAsset();
+                    newAsset.setHostname(hostname);
+                    newAsset.setOsManager(osManager);
+                    newAsset.setMwManager(mwManager);
+                    assetRepository.save(newAsset);
+                    System.out.println("Inserted new asset: " + hostname);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
    
 }

@@ -16,6 +16,8 @@ public class CmdbAsset {
     private String disk;
     private String bizType;
     private String description;
+    private String osManager;
+    private String mwManager;
 
     // 기본 생성자
     public CmdbAsset() {}
@@ -87,4 +89,12 @@ public class CmdbAsset {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    public String getOsManager() { return osManager; }
+
+    public void setOsManager(String osManager) { this.osManager = osManager; }
+
+    public String getMwManager() { return mwManager; }
+
+    public void setMwManager(String mwManager) { this.mwManager = mwManager; }
 }
