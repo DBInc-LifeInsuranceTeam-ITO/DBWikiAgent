@@ -5,7 +5,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "cmdb_asset")
+@Table(name = "cmdb_server_assets")
 public class CmdbAsset {
 
     @Id
@@ -14,9 +14,7 @@ public class CmdbAsset {
     private String vip;
     private String cpu;
     private String mem;
-    private String disk;
     private String workType;
-    private String description;
     private String osManager;
     private String mwManager;
 
@@ -30,7 +28,6 @@ public class CmdbAsset {
         this.vip = vip;
         this.cpu = cpu;
         this.mem = mem;
-        this.disk = disk;
         this.workType = workType;
     }
 
@@ -75,28 +72,12 @@ public class CmdbAsset {
         this.mem = mem;
     }
 
-    public String getDisk() {
-        return disk;
-    }
-
-    public void setDisk(String disk) {
-        this.disk = disk;
-    }
-
     public String getworkType() {
         return workType;
     }
 
     public void setworkType(String workType) {
         this.workType = workType;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     public String getOsManager() { return osManager; }
