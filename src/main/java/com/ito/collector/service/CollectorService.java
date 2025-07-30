@@ -49,25 +49,30 @@ public class CollectorService {
     }
 
     /**
-     * 엑셀에서 hostname, osManager, mwManager를 읽고 DB에 반영
+     * 엑셀에서 hostname, osManager, mwManager, ip를 읽고 DB에 반영
      */
     public void updateManagersFromExcel(File excelFile) {
+        boolean anyUpdated = false;
+
         try (FileInputStream fis = new FileInputStream(excelFile);
              Workbook workbook = new XSSFWorkbook(fis)) {
 
             Sheet sheet = workbook.getSheetAt(0);
 
             for (Row row : sheet) {
-                if (row.getRowNum() < 2) continue; // 제목 및 헤더 스킵
+                if (row.getRowNum() < 2) continue;
 
-                String hostname = getCellValue(row, 4);      // 호스트명
-                String osManager = getCellValue(row, 20);    // OS 담당
-                String mwManager = getCellValue(row, 21);    // MW 담당
+                String ip = getCellValue(row, 3);           // IP (예: D열)
+                String hostname = getCellValue(row, 4);     // 호스트명 (예: E열)
+                String osManager = getCellValue(row, 20);   // OS 담당 (U열)
+                String mwManager = getCellValue(row, 21);   // MW 담당 (V열)
+                String cpu = getCellValue(row, 9);       // G열: CPU
+                String mem = getCellValue(row, 10);       // H열: Memory
 
                 if (hostname.isBlank()) continue;
 
                 CmdbAsset asset = assetRepository.findAll().stream()
-                        .filter(a -> hostname.equals(a.getHostname()))
+                        .filter(a -> hostname.equalsIgnoreCase(a.getHostname()))
                         .findFirst()
                         .orElse(null);
 
@@ -83,14 +88,37 @@ public class CollectorService {
                         asset.setMwManager(mwManager);
                         changed = true;
                     }
+                    if ((asset.getCpu() == null || asset.getCpu().isBlank()) && !cpu.isBlank()) {
+                        asset.setCpu(cpu);
+                        changed = true;
+                    }
+
+                    if ((asset.getMem() == null || asset.getMem().isBlank()) && !mem.isBlank()) {
+                        asset.setMem(mem);
+                        changed = true;
+                    }
 
                     if (changed) {
                         assetRepository.save(asset);
+                        anyUpdated = true;
                         System.out.println("Updated asset: " + hostname);
                     }
                 } else {
-                    System.out.println("Not found in DB (skipped): " + hostname);
+                    // 새 자산 생성
+                    CmdbAsset newAsset = new CmdbAsset();
+                    newAsset.setHostname(hostname);
+                    newAsset.setIp(ip);
+                    newAsset.setOsManager(osManager);
+                    newAsset.setMwManager(mwManager);
+
+                    assetRepository.save(newAsset);
+                    anyUpdated = true;
+                    System.out.println("Inserted new asset: " + hostname);
                 }
+            }
+
+            if (anyUpdated) {
+                collect(); // DB 반영 후 위키 업로드
             }
 
         } catch (Exception e) {
@@ -98,9 +126,6 @@ public class CollectorService {
         }
     }
 
-    /**
-     * 셀에서 문자열 안전하게 꺼내기
-     */
     private String getCellValue(Row row, int index) {
         try {
             Cell cell = row.getCell(index);
@@ -111,6 +136,7 @@ public class CollectorService {
             return "";
         }
     }
+
     @PostConstruct
     public void initExcelUpdate() {
         File excelFile = new File("C:\\Users\\Administrator\\Desktop\\project\\wiki\\DBWikiAgent\\src\\main\\resources\\server_linux.xlsx");

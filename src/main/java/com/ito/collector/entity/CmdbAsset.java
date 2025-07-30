@@ -37,15 +37,15 @@ public class CmdbAsset {
     }
 
     public void setVip(String vip) {
-        this.ip = ip;
+        this.vip = vip;
     }
 
     public String getVip() {
         return vip;
     }
 
-    public void setIp(String vip) {
-        this.vip = vip;
+    public void setIp(String ip) {
+        this.ip = ip;
     }
 
     public String getHostname() {
