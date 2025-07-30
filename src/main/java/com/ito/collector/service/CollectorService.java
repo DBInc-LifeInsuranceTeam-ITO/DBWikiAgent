@@ -62,12 +62,13 @@ public class CollectorService {
             for (Row row : sheet) {
                 if (row.getRowNum() < 2) continue;
 
-                String ip = getCellValue(row, 3);           // IP (예: D열)
+                String ip = getCellValue(row, 5);           // IP (예: D열)
                 String hostname = getCellValue(row, 4);     // 호스트명 (예: E열)
                 String osManager = getCellValue(row, 20);   // OS 담당 (U열)
                 String mwManager = getCellValue(row, 21);   // MW 담당 (V열)
                 String cpu = getCellValue(row, 9);       // G열: CPU
                 String mem = getCellValue(row, 10);       // H열: Memory
+                String workType = getCellValue(row, 13);
 
                 if (hostname.isBlank()) continue;
 
@@ -88,6 +89,7 @@ public class CollectorService {
                         asset.setMwManager(mwManager);
                         changed = true;
                     }
+
                     if ((asset.getCpu() == null || asset.getCpu().isBlank()) && !cpu.isBlank()) {
                         asset.setCpu(cpu);
                         changed = true;
@@ -95,6 +97,11 @@ public class CollectorService {
 
                     if ((asset.getMem() == null || asset.getMem().isBlank()) && !mem.isBlank()) {
                         asset.setMem(mem);
+                        changed = true;
+                    }
+
+                    if ((asset.getworkType() == null || asset.getworkType().isBlank()) && !workType.isBlank()) {
+                        asset.setworkType(workType);
                         changed = true;
                     }
 
