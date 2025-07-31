@@ -60,7 +60,7 @@ public class CollectorService {
             Sheet sheet = workbook.getSheetAt(0);
 
             for (Row row : sheet) {
-                if (row.getRowNum() < 2) continue;
+                if (row.getRowNum() < 1) continue;
 
                 String ip = getCellValue(row, 5);           // IP (예: D열)
                 String hostname = getCellValue(row, 4);     // 호스트명 (예: E열)
@@ -70,7 +70,7 @@ public class CollectorService {
                 String mem = getCellValue(row, 10);       // H열: Memory
                 String workType = getCellValue(row, 13);
 
-                if (hostname.isBlank()) continue;
+                if (hostname.isBlank() || hostname.equals("호스트명")) continue;
 
                 CmdbAsset asset = assetRepository.findAll().stream()
                         .filter(a -> hostname.equalsIgnoreCase(a.getHostname()))
@@ -87,6 +87,11 @@ public class CollectorService {
 
                     if (!mwManager.isBlank() && !Objects.equals(asset.getMwManager(), mwManager)) {
                         asset.setMwManager(mwManager);
+                        changed = true;
+                    }
+
+                    if ((asset.getIp() == null || asset.getIp().isBlank()) && !ip.isBlank()) {
+                        asset.setIp(ip);
                         changed = true;
                     }
 
