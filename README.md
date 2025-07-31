@@ -1,5 +1,5 @@
 
-# 🏗️ Spring Boot 수집기 프로젝트 기본 디렉토리 구조
+# 🏗️ DBWikiAgent 기본 디렉토리 구조
 
 ```text
 📁 src
