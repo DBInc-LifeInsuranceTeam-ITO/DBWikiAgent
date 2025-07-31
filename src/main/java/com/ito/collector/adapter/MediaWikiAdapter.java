@@ -4,26 +4,42 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 @Component
 public class MediaWikiAdapter {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+
     public void uploadToWiki(String pageTitle, String content, String csrfToken, String sessionCookie) {
-        String apiUrl = "http://your.wiki.address/api.php";
+        String apiUrl = "http://10.90.40.231/wiki/api.php"; // 실제 주소로 교체
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         headers.set("Cookie", sessionCookie);
 
-        String body = String.format("action=edit&title=%s&text=%s&format=json&token=%s",
-                pageTitle, content, csrfToken);
+        try {
+            String encodedTitle = URLEncoder.encode(pageTitle, StandardCharsets.UTF_8);
+            String encodedContent = URLEncoder.encode(content, StandardCharsets.UTF_8);
+            String encodedToken = URLEncoder.encode(csrfToken, StandardCharsets.UTF_8);
 
-        HttpEntity<String> request = new HttpEntity<>(body, headers);
+            String body = String.format(
+                    "action=edit&format=json&title=%s&text=%s&token=%s",
+                    encodedTitle, encodedContent, encodedToken
+            );
 
-        ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, request, String.class);
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new RuntimeException("문서 업로드 실패: " + response.getBody());
+            HttpEntity<String> request = new HttpEntity<>(body, headers);
+            ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, request, String.class);
+            System.out.println("Wiki upload response: " + response.getStatusCode() + " / " + response.getBody());
+
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new RuntimeException("문서 업로드 실패: " + response.getBody());
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("문서 업로드 중 예외 발생", e);
         }
     }
 }

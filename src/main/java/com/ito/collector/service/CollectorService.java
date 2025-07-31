@@ -3,7 +3,6 @@ package com.ito.collector.service;
 import com.ito.collector.adapter.MediaWikiAdapter;
 import com.ito.collector.entity.CmdbAsset;
 import com.ito.collector.repository.CmdbAssetRepository;
-
 import jakarta.annotation.PostConstruct;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -21,36 +20,23 @@ public class CollectorService {
     private final CmdbAssetRepository assetRepository;
     private final MediaWikiAdapter wikiAdapter;
 
+    // 실제 MediaWiki 인증 정보
+    private static final String TOKEN = "YOUR_CSRF_TOKEN";
+    private static final String COOKIE = "YOUR_SESSION_COOKIE";
+
     public CollectorService(CmdbAssetRepository assetRepository, MediaWikiAdapter wikiAdapter) {
         this.assetRepository = assetRepository;
         this.wikiAdapter = wikiAdapter;
     }
 
-    @Scheduled(cron = "0 0 * * * *") // 매 시간 실행
-    public void collect() {
-        List<CmdbAsset> data = assetRepository.findAll();
-        String content = buildWikiText(data);
-        wikiAdapter.uploadToWiki("시스템이력", content, "토큰", "쿠키");
+    // 엑셀 기반 DB 업데이트 + 위키 자동 업로드
+    @PostConstruct
+    public void init() {
+        File excelFile = new File("C:\\Users\\Administrator\\Desktop\\project\\wiki\\DBWikiAgent\\src\\main\\resources\\server_linux.xlsx");
+        updateManagersFromExcel(excelFile); // DB 업데이트
+        uploadPagesFromAssets();            // 위키 업로드
     }
 
-    private String buildWikiText(List<CmdbAsset> dataList) {
-        StringBuilder sb = new StringBuilder("== 시스템 이력 ==\n");
-
-        for (CmdbAsset asset : dataList) {
-            sb.append("** Hostname: ").append(asset.getHostname()).append("\n");
-            sb.append("* IP: ").append(asset.getIp()).append("\n");
-            sb.append("** CPU: ").append(asset.getCpu()).append("\n");
-            sb.append("** Memory: ").append(asset.getMem()).append("\n");
-            sb.append("** 업무명: ").append(asset.getworkType()).append("\n");
-            sb.append("\n");
-        }
-
-        return sb.toString();
-    }
-
-    /**
-     * 엑셀에서 hostname, osManager, mwManager, ip를 읽고 DB에 반영
-     */
     public void updateManagersFromExcel(File excelFile) {
         boolean anyUpdated = false;
 
@@ -62,12 +48,12 @@ public class CollectorService {
             for (Row row : sheet) {
                 if (row.getRowNum() < 1) continue;
 
-                String ip = getCellValue(row, 5);           // IP (예: D열)
-                String hostname = getCellValue(row, 4);     // 호스트명 (예: E열)
-                String osManager = getCellValue(row, 20);   // OS 담당 (U열)
-                String mwManager = getCellValue(row, 21);   // MW 담당 (V열)
-                String cpu = getCellValue(row, 9);       // G열: CPU
-                String mem = getCellValue(row, 10);       // H열: Memory
+                String ip = getCellValue(row, 5);
+                String hostname = getCellValue(row, 4);
+                String osManager = getCellValue(row, 20);
+                String mwManager = getCellValue(row, 21);
+                String cpu = getCellValue(row, 9);
+                String mem = getCellValue(row, 10);
                 String workType = getCellValue(row, 13);
 
                 if (hostname.isBlank() || hostname.equals("호스트명")) continue;
@@ -116,13 +102,14 @@ public class CollectorService {
                         System.out.println("Updated asset: " + hostname);
                     }
                 } else {
-                    // 새 자산 생성
                     CmdbAsset newAsset = new CmdbAsset();
                     newAsset.setHostname(hostname);
                     newAsset.setIp(ip);
                     newAsset.setOsManager(osManager);
                     newAsset.setMwManager(mwManager);
-
+                    newAsset.setCpu(cpu);
+                    newAsset.setMem(mem);
+                    newAsset.setworkType(workType);
                     assetRepository.save(newAsset);
                     anyUpdated = true;
                     System.out.println("Inserted new asset: " + hostname);
@@ -130,7 +117,7 @@ public class CollectorService {
             }
 
             if (anyUpdated) {
-                collect(); // DB 반영 후 위키 업로드
+                System.out.println("DB 업데이트 완료");
             }
 
         } catch (Exception e) {
@@ -142,16 +129,66 @@ public class CollectorService {
         try {
             Cell cell = row.getCell(index);
             if (cell == null) return "";
-            cell.setCellType(CellType.STRING);
-            return cell.getStringCellValue().trim();
+            return switch (cell.getCellType()) {
+                case STRING -> cell.getStringCellValue().trim();
+                case NUMERIC -> String.valueOf(cell.getNumericCellValue()).trim();
+                default -> "";
+            };
         } catch (Exception e) {
             return "";
         }
     }
 
-    @PostConstruct
-    public void initExcelUpdate() {
-        File excelFile = new File("C:\\Users\\Administrator\\Desktop\\project\\wiki\\DBWikiAgent\\src\\main\\resources\\server_linux.xlsx");
-        updateManagersFromExcel(excelFile);
+    public void uploadPagesFromAssets() {
+        List<CmdbAsset> assets = assetRepository.findAll();
+
+        for (CmdbAsset asset : assets) {
+            String pageTitle = asset.getHostname();
+            String pageContent = buildServerPageContent(asset);
+            wikiAdapter.uploadToWiki(pageTitle, pageContent, TOKEN, COOKIE);
+            System.out.println("Uploaded Wiki Page: " + pageTitle);
+        }
+    }
+
+    private String buildServerPageContent(CmdbAsset asset) {
+        return """
+            __TOC__
+
+            <div style="float: right; margin: 1em;">
+            {| class="wikitable"
+            ! 서버 정보
+            |-
+            | 항목 || 내용
+            |-
+            | 서버명 || %s
+            |-
+            | IP || %s
+            |-
+            | 업무계 || %s
+            |-
+            | CPU || %s
+            |-
+            | Memory || %s
+            |}
+            </div>
+
+            * 개요  
+            %s 은(는) %s 업무에 해당하는 서버입니다.
+
+            [[Category:%s]]
+            """.formatted(
+                safe(asset.getHostname()),      // 1
+                safe(asset.getIp()),            // 2
+                safe(asset.getworkType()),      // 3 ← 추가
+                safe(asset.getCpu()),           // 4
+                safe(asset.getMem()),           // 5
+                safe(asset.getHostname()),      // 6 ← 추가
+                safe(asset.getworkType()),      // 7 ← 추가
+                safe(asset.getworkType())       // 8 ← 추가
+        );
+    }
+
+    private String safe(String val) {
+        return val == null ? "" : val;
     }
 }
