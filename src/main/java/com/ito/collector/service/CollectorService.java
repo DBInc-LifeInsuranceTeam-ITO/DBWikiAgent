@@ -144,8 +144,17 @@ public class CollectorService {
 
         for (CmdbAsset asset : assets) {
             String pageTitle = asset.getHostname();
-            String pageContent = buildServerPageContent(asset);
-            wikiAdapter.uploadToWiki(pageTitle, pageContent, token, cookie);
+            String autogenContent = buildServerPageContent(asset); // 테이블만 생성
+
+            // 기존 문서 내용 가져오기
+            String originalContent = wikiAdapter.fetchPageContent(pageTitle, cookie);
+
+            // 자동 생성 영역만 교체
+            String mergedContent = wikiAdapter.mergeAutoGenSection(originalContent, autogenContent);
+
+            // 위키 업로드
+            wikiAdapter.uploadToWiki(pageTitle, mergedContent, token, cookie);
+
             System.out.println("Uploaded Wiki Page: " + pageTitle);
         }
     }

@@ -1,5 +1,7 @@
 package com.ito.collector.adapter;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -11,6 +13,47 @@ import java.nio.charset.StandardCharsets;
 public class MediaWikiAdapter {
 
     private final RestTemplate restTemplate = new RestTemplate();
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final String API_URL = "http://10.90.40.231/wiki/api.php";
+
+    public String fetchPageContent(String title, String sessionCookie) {
+        try {
+            String url = API_URL + "?action=query&prop=revisions&titles="
+                    + URLEncoder.encode(title, StandardCharsets.UTF_8)
+                    + "&rvslots=main&rvprop=content&format=json";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Cookie", sessionCookie);
+
+            HttpEntity<Void> request = new HttpEntity<>(headers);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+
+            JsonNode root = objectMapper.readTree(response.getBody());
+            return root.path("query")
+                    .path("pages").elements().next()
+                    .path("revisions").get(0)
+                    .path("slots").path("main")
+                    .path("*").asText("");
+        } catch (Exception e) {
+            throw new RuntimeException("문서 조회 실패", e);
+        }
+    }
+
+    public String mergeAutoGenSection(String originalContent, String newAutogenBlock) {
+        String startTag = "<!-- AUTOGEN:START -->";
+        String endTag = "<!-- AUTOGEN:END -->";
+
+        if (!originalContent.contains(startTag) || !originalContent.contains(endTag)) {
+            return startTag + "\n" + newAutogenBlock + "\n" + endTag + "\n\n" + originalContent;
+        }
+
+        int start = originalContent.indexOf(startTag);
+        int end = originalContent.indexOf(endTag) + endTag.length();
+
+        return originalContent.substring(0, start)
+                + startTag + "\n" + newAutogenBlock + "\n" + endTag
+                + originalContent.substring(end);
+    }
 
     public void uploadToWiki(String pageTitle, String content, String csrfToken, String sessionCookie) {
         // MediaWiki API URL은 일반적으로 /api.php 이며, 경로 수정 가능
