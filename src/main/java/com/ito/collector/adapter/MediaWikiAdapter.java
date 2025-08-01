@@ -29,30 +29,37 @@ public class MediaWikiAdapter {
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
 
             JsonNode root = objectMapper.readTree(response.getBody());
-            return root.path("query")
-                    .path("pages").elements().next()
-                    .path("revisions").get(0)
-                    .path("slots").path("main")
-                    .path("*").asText("");
+            JsonNode pages = root.path("query").path("pages");
+
+            // 페이지가 여러 개일 수 있으므로 첫 번째 요소만 가져오기
+            JsonNode firstPage = pages.elements().hasNext() ? pages.elements().next() : null;
+
+            if (firstPage == null || firstPage.has("missing")) {
+                // 문서가 존재하지 않으면 빈 문자열 반환
+                return "";
+            }
+
+            JsonNode revisions = firstPage.path("revisions");
+            if (!revisions.isArray() || revisions.isEmpty()) {
+                return "";
+            }
+
+            return revisions.get(0).path("slots").path("main").path("*").asText("");
+
         } catch (Exception e) {
             throw new RuntimeException("문서 조회 실패", e);
         }
     }
 
     public String mergeAutoGenSection(String originalContent, String newAutogenBlock) {
-        String startTag = "<!-- AUTOGEN:START -->";
-        String endTag = "<!-- AUTOGEN:END -->";
+        String pattern = "(?s)<!-- AUTOGEN:START -->.*?<!-- AUTOGEN:END -->";
+        String replacement = String.format("<!-- AUTOGEN:START -->\n%s\n<!-- AUTOGEN:END -->", newAutogenBlock);
 
-        if (!originalContent.contains(startTag) || !originalContent.contains(endTag)) {
-            return startTag + "\n" + newAutogenBlock + "\n" + endTag + "\n\n" + originalContent;
+        if (originalContent.matches("(?s).*<!-- AUTOGEN:START -->.*<!-- AUTOGEN:END -->.*")) {
+            return originalContent.replaceAll(pattern, replacement);
+        } else {
+            return replacement + "\n\n" + originalContent;
         }
-
-        int start = originalContent.indexOf(startTag);
-        int end = originalContent.indexOf(endTag) + endTag.length();
-
-        return originalContent.substring(0, start)
-                + startTag + "\n" + newAutogenBlock + "\n" + endTag
-                + originalContent.substring(end);
     }
 
     public void uploadToWiki(String pageTitle, String content, String csrfToken, String sessionCookie) {

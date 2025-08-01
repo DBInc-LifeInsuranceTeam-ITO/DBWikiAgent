@@ -139,6 +139,17 @@ public class CollectorService {
         }
     }
 
+    private void resetPageToAutogenBlockOnly(String pageTitle, String autogenContent, String token, String cookie) {
+        String newText = """
+        <!-- AUTOGEN:START -->
+        %s
+        <!-- AUTOGEN:END -->
+        """.formatted(autogenContent);
+
+        wikiAdapter.uploadToWiki(pageTitle, newText, token, cookie);
+        System.out.println("Reset Wiki Page to AUTOGEN only: " + pageTitle);
+    }
+
     public void uploadPagesFromAssets(String token, String cookie) {
         List<CmdbAsset> assets = assetRepository.findAll();
 
@@ -155,6 +166,7 @@ public class CollectorService {
             // 위키 업로드
             wikiAdapter.uploadToWiki(pageTitle, mergedContent, token, cookie);
 
+            //resetPageToAutogenBlockOnly(pageTitle, autogenContent, token, cookie);
             System.out.println("Uploaded Wiki Page: " + pageTitle);
         }
     }
