@@ -12,9 +12,9 @@ public class MediaWikiAdapter {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-
     public void uploadToWiki(String pageTitle, String content, String csrfToken, String sessionCookie) {
-        String apiUrl = "http://10.90.40.231/wiki/api.php"; // 실제 주소로 교체
+        // MediaWiki API URL은 일반적으로 /api.php 이며, 경로 수정 가능
+        String apiUrl = "http://10.90.40.231//wiki/api.php"; // 고정 주소 사용 (인증 로직과 통일)
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -34,7 +34,7 @@ public class MediaWikiAdapter {
             ResponseEntity<String> response = restTemplate.postForEntity(apiUrl, request, String.class);
             System.out.println("Wiki upload response: " + response.getStatusCode() + " / " + response.getBody());
 
-            if (!response.getStatusCode().is2xxSuccessful()) {
+            if (!response.getStatusCode().is2xxSuccessful() || (response.getBody() != null && response.getBody().contains("\"error\""))) {
                 throw new RuntimeException("문서 업로드 실패: " + response.getBody());
             }
 

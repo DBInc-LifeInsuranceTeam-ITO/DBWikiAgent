@@ -3,6 +3,8 @@ package com.ito.collector.service;
 import com.ito.collector.adapter.MediaWikiAdapter;
 import com.ito.collector.entity.CmdbAsset;
 import com.ito.collector.repository.CmdbAssetRepository;
+import com.ito.collector.util.WikiAuthUtil;
+import com.ito.collector.util.WikiAuthUtil.WikiSession;
 import jakarta.annotation.PostConstruct;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -20,10 +22,6 @@ public class CollectorService {
     private final CmdbAssetRepository assetRepository;
     private final MediaWikiAdapter wikiAdapter;
 
-    // 실제 MediaWiki 인증 정보
-    private static final String TOKEN = "YOUR_CSRF_TOKEN";
-    private static final String COOKIE = "YOUR_SESSION_COOKIE";
-
     public CollectorService(CmdbAssetRepository assetRepository, MediaWikiAdapter wikiAdapter) {
         this.assetRepository = assetRepository;
         this.wikiAdapter = wikiAdapter;
@@ -34,7 +32,9 @@ public class CollectorService {
     public void init() {
         File excelFile = new File("C:\\Users\\Administrator\\Desktop\\project\\wiki\\DBWikiAgent\\src\\main\\resources\\server_linux.xlsx");
         updateManagersFromExcel(excelFile); // DB 업데이트
-        uploadPagesFromAssets();            // 위키 업로드
+
+        WikiSession session = WikiAuthUtil.loginAndGetToken();
+        uploadPagesFromAssets(session.token, session.cookie); // 위키 업로드
     }
 
     public void updateManagersFromExcel(File excelFile) {
@@ -139,13 +139,13 @@ public class CollectorService {
         }
     }
 
-    public void uploadPagesFromAssets() {
+    public void uploadPagesFromAssets(String token, String cookie) {
         List<CmdbAsset> assets = assetRepository.findAll();
 
         for (CmdbAsset asset : assets) {
             String pageTitle = asset.getHostname();
             String pageContent = buildServerPageContent(asset);
-            wikiAdapter.uploadToWiki(pageTitle, pageContent, TOKEN, COOKIE);
+            wikiAdapter.uploadToWiki(pageTitle, pageContent, token, cookie);
             System.out.println("Uploaded Wiki Page: " + pageTitle);
         }
     }
@@ -154,8 +154,8 @@ public class CollectorService {
         return """
             __TOC__
 
-            <div style="float: right; margin: 1em;">
-            {| class="wikitable"
+            <div style=\"float: right; margin: 1em;\">
+            {| class=\"wikitable\"
             ! 서버 정보
             |-
             | 항목 || 내용
@@ -177,14 +177,14 @@ public class CollectorService {
 
             [[Category:%s]]
             """.formatted(
-                safe(asset.getHostname()),      // 1
-                safe(asset.getIp()),            // 2
-                safe(asset.getworkType()),      // 3 ← 추가
-                safe(asset.getCpu()),           // 4
-                safe(asset.getMem()),           // 5
-                safe(asset.getHostname()),      // 6 ← 추가
-                safe(asset.getworkType()),      // 7 ← 추가
-                safe(asset.getworkType())       // 8 ← 추가
+                safe(asset.getHostname()),
+                safe(asset.getIp()),
+                safe(asset.getworkType()),
+                safe(asset.getCpu()),
+                safe(asset.getMem()),
+                safe(asset.getHostname()),
+                safe(asset.getworkType()),
+                safe(asset.getworkType())
         );
     }
 
