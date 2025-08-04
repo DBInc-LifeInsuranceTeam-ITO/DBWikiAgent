@@ -2,6 +2,7 @@ package com.ito.collector;
 
 import com.ito.collector.entity.CmdbAsset;
 import com.ito.collector.service.CmdbAssetService;
+import com.ito.collector.service.CmdbAssetUploadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -15,17 +16,23 @@ public class CollectorApplication implements CommandLineRunner {
     @Autowired
     private CmdbAssetService cmdbAssetService;
 
+    @Autowired
+    private CmdbAssetUploadService cmdbAssetUploadService;
+
     public static void main(String[] args) {
         SpringApplication.run(CollectorApplication.class, args);
     }
 
     @Override
     public void run(String... args) throws Exception {
-        // 애플리케이션 시작 시 실행됨
         List<CmdbAsset> assets = cmdbAssetService.getAllAssets();
-        System.out.println("=== CMDB 자산 목록 ===");
+
         for (CmdbAsset asset : assets) {
-            System.out.println(asset);
+            String hostname = asset.getHostname();
+            System.out.println("▶ 위키 페이지 업데이트 시도: " + hostname);
+            cmdbAssetUploadService.updateExistingWikiPage(hostname);
         }
+
+        System.out.println("=== 모든 자산 위키 업데이트 완료 ===");
     }
 }
