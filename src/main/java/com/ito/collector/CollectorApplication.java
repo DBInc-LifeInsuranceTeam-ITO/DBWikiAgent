@@ -29,23 +29,23 @@ public class CollectorApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        log.info("⏳ 엑셀 기반 자산 업데이트 시작");
+        log.info("엑셀 기반 자산 업데이트 시작");
         excelAssetUpdaterService.updateAssetsFromExcel();
-        log.info("✅ 엑셀 기반 자산 업데이트 완료");
+        log.info("엑셀 기반 자산 업데이트 완료");
 
-        log.info("⏳ 위키 페이지 업데이트 시작");
+        log.info("위키 페이지 업데이트 시작");
 
         List<CmdbAsset> assets = cmdbAssetService.getAllAssets();
         for (CmdbAsset asset : assets) {
             String hostname = asset.getHostname();
             try {
                 wikiUploadService.uploadPage(hostname);
-                log.info("✅ 위키 업데이트 성공: {}", hostname);
+                log.info("위키 업데이트 성공: {}", hostname);
             } catch (Exception e) {
-                log.error("❌ 위키 업데이트 실패: {}", hostname, e);
+                log.error("위키 업데이트 실패: {}", hostname, e);
             }
         }
 
-        log.info("🏁 실행 완료! 스케줄러는 매일 자정 자동 실행됩니다.");
+        log.info("실행 완료! 스케줄러는 매일 자정 자동 실행됩니다.");
     }
 }
