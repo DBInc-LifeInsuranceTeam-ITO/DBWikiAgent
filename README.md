@@ -1,3 +1,29 @@
+# 🧠 DBWikiAgent
+
+## 📌 프로젝트 개요
+
+**DBWikiAgent**는 서버 자산(CMDB) 정보를 기반으로  
+MediaWiki 페이지를 자동 생성 및 갱신해주는 Spring Boot 기반 자동화 도구입니다.
+
+- Wiki 페이지는 `hostname`을 기준으로 자동으로 생성되며,
+  서버 자산 정보와 변경 이력 두 가지를 모두 포함합니다.
+
+---
+
+## 🔄 처리 흐름 요약
+
+```text
+[1] 프로그램 시작 또는 자정 스케줄러 작동
+     ↓
+[2] 엑셀 파일(server_linux.xlsx) 읽어서 DB(cmdb_server_assets) 업데이트
+     ↓
+[3] DB에서 자산 정보 + 변경 이력 조회
+     ↓
+[4] Wiki 콘텐츠 렌더링 (표 + 줄글)
+     ↓
+[5] MediaWiki 페이지 업데이트 (자동 생성 or 수정)
+
+```
 
 # 🏗️ DBWikiAgent 디렉터리 구조
 
