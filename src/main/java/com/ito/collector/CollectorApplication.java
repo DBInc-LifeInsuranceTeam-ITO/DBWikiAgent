@@ -23,6 +23,7 @@ public class CollectorApplication implements CommandLineRunner {
     private final CmdbAssetService cmdbAssetService;
     private final WikiUploadService wikiUploadService;
 
+    // 테스트를 위해 main 실행하면 바로 페이지 업데이트되게 설정해놓음. 나중에 스케쥴링만 걸리게 설정 필요 !
     public static void main(String[] args) {
         SpringApplication.run(CollectorApplication.class, args);
     }
