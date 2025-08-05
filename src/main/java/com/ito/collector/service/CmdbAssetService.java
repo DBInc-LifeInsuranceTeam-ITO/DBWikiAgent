@@ -17,4 +17,8 @@ public class CmdbAssetService {
     public List<CmdbAsset> getAllAssets() {
         return cmdbAssetRepository.findAll();
     }
+
+    public CmdbAsset getByHostname(String hostname) {
+        return cmdbAssetRepository.findById(hostname).orElse(null);
+    }
 }
