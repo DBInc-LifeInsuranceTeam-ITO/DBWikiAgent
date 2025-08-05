@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <property name="LOG_PATH" value="logs" />
+    <property name="LOG_PATH" value="/log/collector" />
     <property name="APP_NAME" value="collector" />
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
