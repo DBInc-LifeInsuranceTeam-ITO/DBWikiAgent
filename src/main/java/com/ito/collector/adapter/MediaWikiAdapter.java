@@ -19,7 +19,7 @@ public class MediaWikiAdapter {
 
     private static final String API_URL = "http://10.90.40.231//wiki/api.php";
     private static final String USERNAME = "191723";
-    private static final String PASSWORD = "thdus123!";
+    private static final String PASSWORD = "1q1q!Q!Q";
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final HttpClient client;
