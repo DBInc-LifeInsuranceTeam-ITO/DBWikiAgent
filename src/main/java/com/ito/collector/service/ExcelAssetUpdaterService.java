@@ -49,6 +49,10 @@ public class ExcelAssetUpdaterService {
                     String osManager  = getCellValue(row, 20);
                     String mwManager  = getCellValue(row, 21);
 
+                    if ("DR".equals(workType)) {
+                        continue; // DR인 경우 해당 항목을 건너뜁니다
+                    }
+
                     if (hostname.isBlank()) continue;
 
                     Optional<CmdbAsset> existingOpt = assetRepository.findById(hostname);

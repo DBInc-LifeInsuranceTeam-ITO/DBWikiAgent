@@ -11,6 +11,7 @@ public class WikiRenderService {
     private final CmdbAssetService cmdbAssetService;
     private final ChangeHistoryService changeHistoryService;
 
+
     public String renderFullContent(String hostname) {
         // 1. CMDB 자산 정보 테이블 블럭
         CmdbAsset asset = cmdbAssetService.getByHostname(hostname);
@@ -24,29 +25,73 @@ public class WikiRenderService {
     }
 
     private String buildAssetTable(CmdbAsset asset) {
-        if (asset == null) {
-            return "== 서버 자산 정보 ==\n- 해당 호스트에 대한 자산 정보가 없습니다.";
-        }
-
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("== 서버 자산 정보 ==\n\n");
-        sb.append("이 페이지는 CMDB에서 자동으로 갱신되는 서버 자산 정보입니다.\n\n");
-        sb.append("----\n\n");
-
-        sb.append("{| class=\"wikitable\" style=\"width: 60%; border: 1px solid #aaa;\"\n");
-        sb.append("! 항목 !! 값\n");
-        sb.append("|-\n| Hostname || ").append(safe(asset.getHostname())).append("\n");
-        sb.append("|-\n| IP || ").append(safe(asset.getIp())).append("\n");
-        sb.append("|-\n| VIP || ").append(safe(asset.getVip())).append("\n");
-        sb.append("|-\n| CPU || ").append(safe(asset.getCpu())).append("\n");
-        sb.append("|-\n| Memory || ").append(safe(asset.getMem())).append("\n");
-        sb.append("|-\n| Work Type || ").append(safe(asset.getWorkType())).append("\n");
-        sb.append("|-\n| OS 담당자 || ").append(safe(asset.getOsManager())).append("\n");
-        sb.append("|-\n| MW 담당자 || ").append(safe(asset.getMwManager())).append("\n");
-        sb.append("|}\n\n");
-
-        return sb.toString();
+        return """
+                <div style="display: flex; gap: 20px; align-items: flex-start;">
+                
+                    <!-- 📑 목차 -->
+                    __TOC__
+                
+                    <div style="width: 300px; flex-shrink: 0; margin-left: auto; border: 2px solid #bbb; border-radius: 10px; padding: 12px; background-color: #f0f8ff;">
+                    {| class="wikitable" style="width: 100%%; font-size: 90%%;"
+                     |+ <b style="font-size: 110%%; color: #005bac;">🔧 상세 정보</b>
+                     |-
+                     ! style="width: 40%%; background-color: #e6f2ff;" | 항목 🏷
+                     ! style="background-color: #e6f2ff;" | 내용 📋
+                     |-
+                     | '''🖥 서버명'''
+                     | <span style="color: #2b3856;">%s</span>
+                     |-
+                     | '''🌐 IP'''
+                     | <code>%s</code>
+                     |-
+                     | '''🗂️ 업무분류'''
+                     | <span style="color: #444;">%s</span>
+                     |-
+                     | '''🏢 업무계'''
+                     | <span style="color: #1a4d1a; font-weight: bold;">%s</span>
+                     |-
+                     | '''⚙️ CPU'''
+                     | <span style="color: #444;">%s</span>
+                     |-
+                     | '''💾 Memory'''
+                     | <span style="color: #444;">%s</span>
+                     |-
+                     | '''🔧 OS 담당자'''
+                     | <span style="color: #444;">%s</span>
+                     |-
+                     | '''💻 MW 담당자'''
+                     | <span style="color: #444;">%s</span>
+                     |}
+                    </div>
+                </div>
+                
+                == <span id="개요">📘 개요</span> ==
+                <div style="margin: 0.5em 0 1.5em 0; font-size: 100%%;">
+                <b style="color: #005bac;">%s</b> 서버는 <b style="color: #1a4d1a;">%s</b> 업무를 수행하는 시스템입니다.  
+                관리자는 정기적으로 상태를 점검해 주세요. 🔍
+                </div>
+                
+                == <span id="서버 변경 내역">🖥 서버 변경 내역</span> ==
+                (본문 내용이 여기에 옵니다.)
+                
+                == <span id="기타 참고사항">📎 참고사항</span> ==
+                * 위 정보는 최신 DB 기준 자동 생성된 내용입니다.  
+                * 변경사항 발생 시 데이터센터 담당자에게 문의 바랍니다. 📬
+                
+                [[Category:%s]]
+                """.formatted(
+                safe(asset.getHostname()),
+                safe(asset.getIp()),
+                safe(asset.getWorkCategory()),
+                safe(asset.getWorkType()),
+                safe(asset.getCpu()),
+                safe(asset.getMem()),
+                safe(asset.getOsManager()),
+                safe(asset.getMwManager()),
+                safe(asset.getHostname()),
+                safe(asset.getWorkType()),
+                safe(asset.getWorkCategory())
+        );
     }
 
     private String safe(String val) {
