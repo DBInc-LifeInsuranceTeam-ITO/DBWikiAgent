@@ -44,8 +44,8 @@ public class CmdbAsset {
     public void setCpu(String cpu) { this.cpu = cpu; }
     public String getMem() { return mem; }
     public void setMem(String mem) { this.mem = mem; }
-    public String getworkType() { return workType; }
-    public void setworkType(String workType) { this.workType = workType; }
+    public String getWorkType() { return workType; }
+    public void setWorkType(String workType) { this.workType = workType; }
     public String getOsManager() { return osManager; }
     public void setOsManager(String osManager) { this.osManager = osManager; }
     public String getMwManager() { return mwManager; }

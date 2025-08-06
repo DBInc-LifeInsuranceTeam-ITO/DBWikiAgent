@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface ChangeHistoryRepository extends JpaRepository<ChangeHistory, String> {
-    List<ChangeHistory> findByHostname(String hostname); // 특정 hostname의 변경이력 목록 조회
+    List<ChangeHistory> findByCiNm(String cinm); // 특정 hostname의 변경이력 목록 조회
 }
