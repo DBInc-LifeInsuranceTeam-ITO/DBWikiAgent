@@ -78,7 +78,7 @@ public class WikiRenderService {
                 * 위 정보는 최신 DB 기준 자동 생성된 내용입니다.  
                 * 변경사항 발생 시 데이터센터 담당자에게 문의 바랍니다. 📬
                 
-                [[Category:%s]]
+                %s
                 """.formatted(
                 safe(asset.getHostname()),
                 safe(asset.getIp()),

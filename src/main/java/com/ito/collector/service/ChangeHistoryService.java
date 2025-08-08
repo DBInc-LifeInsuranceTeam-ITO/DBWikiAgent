@@ -36,12 +36,11 @@ public class ChangeHistoryService {
 
         // 변경 이력 테이블 헤더
         sb.append("{| class=\"wikitable\" style=\"width: 100%; font-size: 90%; border: 1px solid #ddd; border-collapse: collapse;\"\n");
-        sb.append("|+ <b style=\"color: #005bac; font-size: 110%;\">🔧 변경 이력</b>\n");
         sb.append("|-\n");
         sb.append("! style=\"background-color: #e6f2ff;\" | 요청 번호\n");
         sb.append("! style=\"background-color: #e6f2ff;\" | 요청 제목\n");
         sb.append("! style=\"background-color: #e6f2ff;\" | 요청자\n");
-        sb.append("! style=\"background-color: #e6f2ff;\" | 요청 날짜\n");  // 요청 날짜 추가
+        //sb.append("! style=\"background-color: #e6f2ff;\" | 요청 날짜\n");  // 요청 날짜 추가
         sb.append("|-\n");
 
         // 변경 이력 항목을 테이블로 추가
