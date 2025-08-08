@@ -80,25 +80,29 @@ public class MediaWikiAdapter {
         JsonNode root = mapper.readTree(stripBom(response.body()));
 
         JsonNode pages = root.path("query").path("pages");
-        if (pages.isMissingNode() || pages.isEmpty()) return null;
+        if (pages.isMissingNode() || pages.isEmpty()) return "";  // 페이지가 존재하지 않으면 빈 문자열 반환
 
         JsonNode firstPage = pages.elements().next();
-        if (firstPage.has("missing")) return null;
+        if (firstPage.has("missing")) return "";  // 페이지가 없으면 빈 문자열 반환
 
         JsonNode revisions = firstPage.path("revisions");
-        if (revisions.isMissingNode() || revisions.isEmpty()) return "";
+        if (revisions.isMissingNode() || revisions.isEmpty()) return "";  // revisions가 없으면 빈 문자열 반환
 
         JsonNode revision = revisions.get(0);
         if (revision.has("slots")) {
-            return revision.path("slots").path("main").path("*").asText("");
+            return revision.path("slots").path("main").path("*").asText("");  // 내용이 비어 있으면 빈 문자열 반환
         }
 
-        return revision.path("*").asText("");
+        return revision.path("*").asText("");  // 내용이 비어 있으면 빈 문자열 반환
     }
 
     public void updatePageWithAutoGenSection(String pageTitle, String autoGenContent) throws Exception {
         String originalContent = fetchPageContent(pageTitle);
-        if (originalContent == null) originalContent = "";
+        if (originalContent == null || originalContent.isEmpty()) {
+            log.info("[{}] 내용이 비어있음. 새 콘텐츠로 업데이트 시작.", pageTitle);
+        } else {
+            log.info("[{}] 기존 콘텐츠로 업데이트 시작.", pageTitle);
+        }
 
         String startTag = "<!-- AUTO-GEN-START -->";
         String endTag = "<!-- AUTO-GEN-END -->";
@@ -108,15 +112,16 @@ public class MediaWikiAdapter {
         Matcher matcher = Pattern.compile(startTag + ".*?" + endTag, Pattern.DOTALL).matcher(originalContent);
 
         if (matcher.find()) {
-            newContent = matcher.replaceFirst(autoGenSection);
+            newContent = matcher.replaceFirst(autoGenSection);  // 기존에 자동 생성된 부분이 있으면 교체
         } else {
-            newContent = originalContent + "\n\n" + autoGenSection;
+            newContent = originalContent + "\n\n" + autoGenSection;  // 없으면 새로 추가
         }
 
+        // 로그인 및 CSRF 토큰 가져오기
         login();
-
         String csrfToken = fetchCsrfToken();
 
+        // 수정된 내용을 전송하기 위한 데이터 생성
         String editData = "action=edit" +
                 "&title=" + URLEncoder.encode(pageTitle, StandardCharsets.UTF_8) +
                 "&text=" + URLEncoder.encode(newContent, StandardCharsets.UTF_8) +
@@ -131,7 +136,7 @@ public class MediaWikiAdapter {
                 .build();
 
         HttpResponse<String> response = client.send(editRequest, HttpResponse.BodyHandlers.ofString());
-        log.info("위키 응답: {}", stripBom(response.body()));
+        log.info("[{}] 위키 페이지 업데이트 응답: {}", pageTitle, stripBom(response.body()));
     }
 
     private String stripBom(String input) {
