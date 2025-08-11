@@ -22,11 +22,10 @@ import java.util.Optional;
 public class ExcelAssetUpdaterService {
 
     private final CmdbAssetRepository assetRepository;
-    private final WikiUploadService wikiUploadService;  // WikiUploadService 추가
+    private final WikiUploadService wikiUploadService;
 
-    // 엑셀 파일 경로 (수정 가능)
-    //private static final String EXCEL_PATH = "C:\\Users\\Administrator\\Desktop\\project\\wiki\\DBWikiAgent\\src\\main\\resources\\server_linux.xlsx";
-    private static final String EXCEL_PATH = "src/main/resources/server_linux.xlsx";
+    //private static final String EXCEL_PATH = "src/main/resources/server_linux.xlsx";  // 엑셀 파일 경로
+    private static final String EXCEL_PATH = "C:\\Users\\Administrator\\Desktop\\project\\wiki\\DBWikiAgent\\src\\main\\resources\\server_all.xlsx";
 
     @Transactional // 트랜잭션을 명시적으로 관리
     public void updateAssetsFromExcel() {
@@ -40,58 +39,79 @@ public class ExcelAssetUpdaterService {
             try (FileInputStream fis = new FileInputStream(excelFile);
                  Workbook workbook = new XSSFWorkbook(fis)) {
 
-                Sheet sheet = workbook.getSheetAt(0);
-
                 // 동일한 호스트명을 가진 서버 정보 저장
                 Map<String, CmdbAsset> hostnameToAssetMap = new HashMap<>();
 
-                for (Row row : sheet) {
-                    if (row.getRowNum() < 1) continue; // 첫 행(헤더) 무시
+                // 2번째, 3번째, 4번째 시트 (index 1, 2, 3)
+                for (int sheetIndex = 1; sheetIndex <= 3; sheetIndex++) {
+                    Sheet sheet = workbook.getSheetAt(sheetIndex);
 
-                    String hostname   = getCellValue(row, 4);
-                    String ip         = getCellValue(row, 5);
-                    String vip        = ""; // 추후 컬럼 확장 시 대응
-                    String cpu        = getCellValue(row, 9);
-                    String mem        = getCellValue(row, 10);
-                    String workType   = getCellValue(row, 13).trim();  // 공백 제거
-                    String osManager  = getCellValue(row, 20);
-                    String mwManager  = getCellValue(row, 21);
-                    String workCategory = getCellValue(row, 11);
+                    if (sheet == null) continue;
 
-                    // workType이 "DR"이면 해당 항목을 건너뜁니다.
-                    if ("DR".equalsIgnoreCase(workType)) {  // 대소문자 구분 없이 비교
-                        continue;
+                    // 각 시트마다 다른 열 인덱스를 지정
+                    int osManagerColIdx = 0;
+                    int mwManagerColIdx = 0;
+
+                    // 시트에 따라 osManager와 mwManager 컬럼 인덱스를 다르게 설정
+                    if (sheetIndex == 1) {
+                        osManagerColIdx = 21; // 2번째 시트에서 osManager 컬럼 인덱스
+                        mwManagerColIdx = 22; // 2번째 시트에서 mwManager 컬럼 인덱스
+                    } else if (sheetIndex == 2) {
+                        osManagerColIdx = 20; // 3번째 시트에서 osManager 컬럼 인덱스
+                        mwManagerColIdx = 21; // 3번째 시트에서 mwManager 컬럼 인덱스
+                    } else if (sheetIndex == 3) {
+                        osManagerColIdx = 25; // 4번째 시트에서 osManager 컬럼 인덱스
+                        mwManagerColIdx = 26; // 4번째 시트에서 mwManager 컬럼 인덱스
                     }
 
-                    if (hostname.isBlank()) continue;
+                    for (Row row : sheet) {
+                        if (row.getRowNum() < 1) continue; // 첫 행(헤더) 무시
 
-                    // 동일한 호스트명을 가진 서버가 이미 있으면 `DR`이 아닌 항목만 저장
-                    if (hostnameToAssetMap.containsKey(hostname)) {
-                        CmdbAsset existingAsset = hostnameToAssetMap.get(hostname);
-                        // 이미 해당 호스트명이 있으면 workType이 "DR"이 아닌 최신 정보를 사용
-                        if (!"DR".equalsIgnoreCase(existingAsset.getWorkType())) {
-                            // 최신 데이터를 유지
-                            existingAsset.setIp(ip);
-                            existingAsset.setVip(vip);
-                            existingAsset.setCpu(cpu);
-                            existingAsset.setMem(mem);
-                            existingAsset.setOsManager(osManager);
-                            existingAsset.setMwManager(mwManager);
-                            existingAsset.setWorkCategory(workCategory);
+                        String hostname   = getCellValue(row, 4);
+                        String ip         = getCellValue(row, 5);
+                        String vip        = ""; // 추후 컬럼 확장 시 대응
+                        String cpu        = getCellValue(row, 9);
+                        String mem        = getCellValue(row, 10);
+                        String workType   = getCellValue(row, 13).trim();  // 공백 제거
+                        String osManager  = getCellValue(row, osManagerColIdx); // 시트마다 다른 osManager 인덱스 사용
+                        String mwManager  = getCellValue(row, mwManagerColIdx); // 시트마다 다른 mwManager 인덱스 사용
+                        String workCategory = getCellValue(row, 11);
+
+                        // workType이 "DR"이면 해당 항목을 건너뜁니다.
+                        if ("DR".equalsIgnoreCase(workType)) {  // 대소문자 구분 없이 비교
+                            continue;
                         }
-                    } else {
-                        CmdbAsset newAsset = new CmdbAsset();
-                        newAsset.setHostname(hostname);
-                        newAsset.setIp(ip);
-                        newAsset.setVip(vip);
-                        newAsset.setCpu(cpu);
-                        newAsset.setMem(mem);
-                        newAsset.setWorkType(workType);
-                        newAsset.setOsManager(osManager);
-                        newAsset.setMwManager(mwManager);
-                        newAsset.setWorkCategory(workCategory);
 
-                        hostnameToAssetMap.put(hostname, newAsset);
+                        if (hostname.isBlank()) continue;
+
+                        // 동일한 호스트명을 가진 서버가 이미 있으면 DR이 아닌 항목만 저장
+                        if (hostnameToAssetMap.containsKey(hostname)) {
+                            CmdbAsset existingAsset = hostnameToAssetMap.get(hostname);
+                            // 이미 해당 호스트명이 있으면 workType이 "DR"이 아닌 최신 정보를 사용
+                            if (!"DR".equalsIgnoreCase(existingAsset.getWorkType())) {
+                                // 최신 데이터를 유지
+                                existingAsset.setIp(ip);
+                                existingAsset.setVip(vip);
+                                existingAsset.setCpu(cpu);
+                                existingAsset.setMem(mem);
+                                existingAsset.setOsManager(osManager);
+                                existingAsset.setMwManager(mwManager);
+                                existingAsset.setWorkCategory(workCategory);
+                            }
+                        } else {
+                            CmdbAsset newAsset = new CmdbAsset();
+                            newAsset.setHostname(hostname);
+                            newAsset.setIp(ip);
+                            newAsset.setVip(vip);
+                            newAsset.setCpu(cpu);
+                            newAsset.setMem(mem);
+                            newAsset.setWorkType(workType);
+                            newAsset.setOsManager(osManager);
+                            newAsset.setMwManager(mwManager);
+                            newAsset.setWorkCategory(workCategory);
+
+                            hostnameToAssetMap.put(hostname, newAsset);
+                        }
                     }
                 }
 
