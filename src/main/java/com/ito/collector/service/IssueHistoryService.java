@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.*;
 
 @Slf4j
 @Service
@@ -27,56 +26,59 @@ public class IssueHistoryService {
     public int uploadIssueHistoryFromExcel() {
         int insertCount = 0;
 
-        log.info("[ISSUE-UPLOAD] 시작 - 파일: {}, 시트: {}", EXCEL_PATH, SHEET_NAME);
+        log.info("▶ IssueHistory 업로드 시작 - 파일: {}, 시트: {}", EXCEL_PATH, SHEET_NAME);
 
-        try (FileInputStream fis = new FileInputStream(new File(EXCEL_PATH));
+        File excelFile = new File(EXCEL_PATH);
+        if (!excelFile.exists()) {
+            log.error("[ISSUE-UPLOAD] 파일이 존재하지 않습니다: {}", EXCEL_PATH);
+            return 0;
+        }
+
+        try (FileInputStream fis = new FileInputStream(excelFile);
              Workbook workbook = new XSSFWorkbook(fis)) {
 
             Sheet sheet = workbook.getSheet(SHEET_NAME);
             if (sheet == null) {
-                log.error("[ISSUE-UPLOAD] 시트 '{}'를 찾을 수 없습니다.", SHEET_NAME);
+                log.error("[ISSUE-UPLOAD] 시트를 찾을 수 없습니다: {}", SHEET_NAME);
                 return 0;
             }
 
-            // 첫 줄(헤더) 제외
             for (Row row : sheet) {
-                if (row.getRowNum() == 0) continue;
+                if (row.getRowNum() < 1) continue; // 헤더 무시
 
-                String issueType     = getCellValue(row, 0);
-                String title         = getCellValue(row, 1);
-                String content       = getCellValue(row, 2);
-                String status        = getCellValue(row, 3);
-                String issueOwner    = getCellValue(row, 4);
-                String workPart      = getCellValue(row, 5);
-                String targetServers = getCellValue(row, 6);
-                String itsmCsdNo     = getCellValue(row, 7);
 
-                // 데이터 확인 로그
-                log.debug("[ISSUE-UPLOAD] Row {} → title='{}', status='{}', servers='{}'",
-                        row.getRowNum(), title, status, targetServers);
+                String issueType    = getCellValue(row, 1);
+                String title        = getCellValue(row, 2);
+                String content      = getCellValue(row, 3);
+                String status       = getCellValue(row, 4);
+                String issueOwner   = getCellValue(row, 5);
+                String workPart     = getCellValue(row, 7);
+                String targetServers= getCellValue(row, 12);
+                String itsmCsdNo    = getCellValue(row, 13);
 
-                if (title.isBlank()) {
-                    log.warn("[ISSUE-UPLOAD] Row {} → 제목이 비어있어 스킵", row.getRowNum());
-                    continue;
-                }
+                if (issueType.isBlank()) continue;
 
-                IssueHistory entity = new IssueHistory();
-                entity.setTitle(title);
-                entity.setContent(content);
-                entity.setStatus(status);
-                entity.setIssueOwner(issueOwner);
-                entity.setWorkPart(workPart);
-                entity.setTargetServers(targetServers);
-                entity.setItsmCsdNo(itsmCsdNo);
+                IssueHistory issue = new IssueHistory();
+                issue.setTitle(title);
+                issue.setContent(content);
+                issue.setStatus(status);
+                issue.setIssueOwner(issueOwner);
+                issue.setWorkPart(workPart);
+                issue.setTargetServers(targetServers);
+                issue.setItsmCsdNo(itsmCsdNo);
 
-                issueHistoryRepository.save(entity);
+                issueHistoryRepository.save(issue);
                 insertCount++;
+
+                log.info("▶ IssueHistory 저장:  type='{}', title='{}', owner='{}'",
+                         issueType, title, issueOwner);
             }
 
-            log.info("[ISSUE-UPLOAD] INSERT 완료: {}건", insertCount);
+            issueHistoryRepository.flush();
+            log.info("▶ IssueHistory 업로드 완료 - 총 {}건 저장", insertCount);
 
         } catch (Exception e) {
-            log.error("[ISSUE-UPLOAD] 오류 발생", e);
+            log.error("[ISSUE-UPLOAD] 엑셀 처리 중 오류 발생", e);
         }
 
         return insertCount;
@@ -87,12 +89,18 @@ public class IssueHistoryService {
             Cell cell = row.getCell(colIdx);
             if (cell == null) return "";
             return switch (cell.getCellType()) {
-                case STRING -> cell.getStringCellValue().trim();
-                case NUMERIC -> String.valueOf(cell.getNumericCellValue()).trim();
+                case STRING  -> cell.getStringCellValue().trim();
+                case NUMERIC -> {
+                    double d = cell.getNumericCellValue();
+                    // 정수면 소수점 제거
+                    if (d == (long)d) yield String.valueOf((long)d);
+                    else yield String.valueOf(d);
+                }
                 case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
-                default -> "";
+                default      -> "";
             };
         } catch (Exception e) {
+            log.warn("▶ 셀 값 읽기 오류 - 행: {}, 열: {}", row.getRowNum(), colIdx, e);
             return "";
         }
     }
