@@ -25,7 +25,6 @@ public class IssueHistoryService {
     @Transactional
     public int uploadIssueHistoryFromExcel() {
         int insertCount = 0;
-
         log.info("▶ IssueHistory 업로드 시작 - 파일: {}, 시트: {}", EXCEL_PATH, SHEET_NAME);
 
         File excelFile = new File(EXCEL_PATH);
