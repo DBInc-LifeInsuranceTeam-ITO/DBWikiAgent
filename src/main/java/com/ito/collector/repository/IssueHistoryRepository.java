@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface IssueHistoryRepository extends JpaRepository<IssueHistory, Long> {
     List<IssueHistory> findByTargetServersContainingIgnoreCaseOrderByCreatedAtDesc(String ciNm);
+
+
 }

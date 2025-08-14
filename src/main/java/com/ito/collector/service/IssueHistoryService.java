@@ -2,6 +2,8 @@ package com.ito.collector.service;
 
 import com.ito.collector.entity.IssueHistory;
 import com.ito.collector.repository.IssueHistoryRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
@@ -20,6 +22,9 @@ import java.util.Map;
 public class IssueHistoryService {
 
     private final IssueHistoryRepository issueHistoryRepository;
+
+    @PersistenceContext
+    private EntityManager em;   // ✅ 추가
 
     private static final String EXCEL_PATH = "C:\\Users\\Administrator\\Desktop\\project\\wiki\\DBWikiAgent\\src\\main\\resources\\server_issue.xlsx";
     private static final String SHEET_NAME = "2025";
@@ -45,6 +50,9 @@ public class IssueHistoryService {
             log.error("[ISSUE-UPLOAD] 파일이 존재하지 않습니다: {}", EXCEL_PATH);
             return 0;
         }
+
+        // 🔴 0) 테이블 초기화: TRUNCATE(권장) → 실패 시 deleteAllInBatch 폴백
+        clearTable();
 
         int inserted = 0;
 
@@ -255,6 +263,20 @@ public class IssueHistoryService {
             }
         } catch (Exception e) {
             log.warn("issueType 세팅 리플렉션 실패: {}", e.getMessage());
+        }
+    }
+
+    /** 테이블 초기화 유틸 */
+    private void clearTable() {
+        try {
+            // ⚠ 테이블명이 실제 스키마와 동일해야 합니다.
+            em.createNativeQuery("TRUNCATE TABLE issue_history RESTART IDENTITY CASCADE")
+                    .executeUpdate();
+            log.info("[ISSUE-UPLOAD] TRUNCATE 실행 (RESTART IDENTITY CASCADE)");
+        } catch (Exception e) {
+            log.warn("[ISSUE-UPLOAD] TRUNCATE 실패 → deleteAllInBatch() 폴백: {}", e.getMessage());
+            issueHistoryRepository.deleteAllInBatch();
+            log.info("[ISSUE-UPLOAD] deleteAllInBatch() 실행 완료");
         }
     }
 }
