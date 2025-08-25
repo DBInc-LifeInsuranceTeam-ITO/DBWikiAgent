@@ -88,9 +88,7 @@ public class WikiRenderService {
                 <b style="color: #005bac;">%s</b> 서버는 <b style="color: #1a4d1a;">%s</b> 업무를 수행하는 시스템입니다.  
                 관리자는 정기적으로 상태를 점검해 주세요. 🔍
                 </div>
-                
-                == <span id="서버 변경 내역">🖥 서버 변경 내역</span> ==
-                (본문 내용이 여기에 옵니다.)
+               
                 
                 == <span id="기타 참고사항">📎 참고사항</span> ==
                 * 위 정보는 최신 DB 기준 자동 생성된 내용입니다.  

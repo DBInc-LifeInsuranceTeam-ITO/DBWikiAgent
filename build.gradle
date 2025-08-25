@@ -1,5 +1,6 @@
 plugins {
 	id 'java'
+	id 'war'
 	id 'org.springframework.boot' version '3.5.3'
 	id 'io.spring.dependency-management' version '1.1.7'
 }
@@ -38,9 +39,14 @@ dependencies {
 	// 테스트
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	// ⬇️ 외부 톰캣에서 제공(패키징 제외)
+	providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
 }
 
 
 tasks.named('test') {
 	useJUnitPlatform()
 }
+//⬇️ WAR 산출 활성화(선호). bootWar만 쓸 거면 생략 가능
+bootJar { enabled = false }
+war     { enabled = true }
