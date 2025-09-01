@@ -6,7 +6,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "change_history")
+@Table(name = "itsm_csd")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -14,21 +14,22 @@ import java.time.LocalDateTime;
 public class ChangeHistory {
 
     @Id
-    private String reqNo;        // ITSM 번호
+    private String reqNo;        // ITSM CSD 번호
     private String ciNm;         // CI 이름
     private String reqTitle;     // 요청 제목
-    private String reqPerId;     // 요청자 ID
-    private String reqDesc;      // 요청 설명
-    private String reqPerson;    // 요청자
+    private String reqDt;     // 요청 날짜
+    private String reqDesc;
+    @Column(name = "hostname") // 요청 설명
+    private String hostName;    // 서버 호스트네임
 
 
-    public ChangeHistory(String reqNo, String ciNm, String reqTitle, String reqPerId, String reqDesc, String reqPerson) {
+    public ChangeHistory(String reqNo, String ciNm, String reqTitle, String reqDt, String reqDesc, String hostName) {
         this.reqNo = reqNo;
         this.ciNm = ciNm;
         this.reqTitle = reqTitle;
-        this.reqPerId = reqPerId;
+        this.reqDt = reqDt;
         this.reqDesc = reqDesc;
-        this.reqPerson = reqPerson;
+        this.hostName = hostName;
     }
     // Getter & Setter
     public String getReqNo() { return reqNo; }
@@ -37,10 +38,10 @@ public class ChangeHistory {
     public void setCiNm(String ciNm) { this.ciNm = ciNm; }
     public String getReqTitle() { return reqTitle; }
     public void setReqTitle(String reqTitle) { this.reqTitle = reqTitle; }
-    public String getReqPerId() { return reqPerId; }
-    public void setReqPerId(String reqPerId) { this.reqPerId = reqPerId; }
+    public String getReqDt() { return reqDt; }
+    public void setReqDt(String reqDt) { this.reqDt = reqDt; }
     public String getReqDesc() { return reqDesc; }
     public void setReqDesc(String reqDesc) { this.reqDesc = reqDesc; }
-    public String getReqPerson() { return reqPerson; }
-    public void setReqPerson(String reqPerson) { this.reqPerson = reqPerson; }
+    public String getHostName() { return hostName; }
+    public void setHostName(String hostName) { this.hostName = hostName; }
 }

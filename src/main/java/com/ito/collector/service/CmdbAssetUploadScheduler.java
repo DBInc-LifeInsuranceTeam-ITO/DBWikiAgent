@@ -16,7 +16,7 @@ public class CmdbAssetUploadScheduler {
     private final WikiUploadService wikiUploadService;
     private final IssueHistoryService issueHistoryService;
 
-    // 1) 매일 23:55에 이슈 이력 엑셀 → DB 적재
+    // 1) 매일 자정에 이슈 이력 엑셀 → DB 적재
     @Scheduled(cron = "0 0 0 * * *")
     public void importIssueHistory() {
         log.info("▶ IssueHistory import 시작");

@@ -255,7 +255,7 @@ public class IssueHistoryService {
     private void setIssueTypeSafely(IssueHistory ih, String issueType) {
         try {
             ih.getClass().getMethod("setIssueType", String.class).invoke(ih, issueType);
-        } catch (NoSuchMethodException nsme) {
+        } catch (NoSuchMethodException name) {
             try {
                 ih.getClass().getMethod("setType", String.class).invoke(ih, issueType);
             } catch (Exception e) {

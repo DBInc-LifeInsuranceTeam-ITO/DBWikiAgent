@@ -94,7 +94,7 @@ public class WikiRenderService {
                 * 위 정보는 최신 DB 기준 자동 생성된 내용입니다.  
                 * 변경사항 발생 시 데이터센터 담당자에게 문의 바랍니다. 📬
                 
-                %s
+                
                 """.formatted(
                 safe(asset.getHostname()),
                 safe(asset.getIp()),
@@ -105,8 +105,7 @@ public class WikiRenderService {
                 safe(asset.getOsManager()),
                 safe(asset.getMwManager()),
                 safe(asset.getHostname()),
-                safe(asset.getWorkType()),
-                safe(asset.getWorkCategory())
+                safe(asset.getWorkType())
         );
     }
 
@@ -114,13 +113,22 @@ public class WikiRenderService {
      * (신규) 운영 이슈 블록: targetServers가 콤마(,)로 구분된 서버 목록.
      * 현재 hostname이 포함된 이슈만 표로 노출.
      */
+
+    private static final String TH_BASE_STYLE = "background-color:#2E75B6; color:white; padding:6px;";
+
+    // width%와 라벨을 받아 MediaWiki 헤더 셀을 만들어줌
+    private static String th(String label, String widthPct) {
+        String width = (widthPct == null || widthPct.isBlank()) ? "" : "width:" + widthPct + "; ";
+        return "! style=\"" + width + TH_BASE_STYLE + "\" | " + label + "\n";
+    }
+
     private String buildOpsIssuesBlock(String currentHostname) {
         String h = normalizeHost(currentHostname);
         if (!StringUtils.hasText(h)) {
             return """
-                   == <span id="운영 이슈">🛠 운영 이슈</span> ==
-                   (서버명이 비어 있어 운영 이슈를 표시할 수 없습니다.)
-                   """;
+                    == <span id="운영 이슈">🛠 운영 이슈</span> ==
+                    (서버명이 비어 있어 운영 이슈를 표시할 수 없습니다.)
+                    """;
         }
 
         List<IssueHistory> all = issueHistoryRepository.findAll();
@@ -134,23 +142,24 @@ public class WikiRenderService {
 
         if (matched.isEmpty()) {
             return """
-                   == <span id="운영 이슈">🛠 운영 이슈</span> ==
-                   * 해당 서버 관련 운영 이슈가 없습니다.
-                   """;
+                    == <span id="운영 이슈">🛠 운영 이슈</span> ==
+                    * 해당 서버 관련 운영 이슈가 없습니다.
+                    """;
         }
 
         StringBuilder sb = new StringBuilder();
         sb.append("== <span id=\"운영 이슈\">🛠 운영 이슈</span> ==\n");
-        sb.append("{| class=\"wikitable\" style=\"width: 100%; font-size: 90%\"\n");
+        sb.append("{| class=\"wikitable\" style=\"width: 100%; font-size: 85%\"\n");
         sb.append("|+ '''운영 이슈 현황 (").append(escape(currentHostname)).append(")'''\n");
         sb.append("|-\n");
-        sb.append("! style=\"width:8%\" | 이슈유형\n");
-        sb.append("! style=\"width:28%\" | 제목\n");
-        sb.append("! style=\"width:8%\" | 상태\n");
-        sb.append("! style=\"width:12%\" | Issue Owner\n");
-        sb.append("! style=\"width:10%\" | 업무파트\n");
-        sb.append("! style=\"width:12%\" | ITSM CSD 번호\n");
-        sb.append("! | 내용(요약)\n");
+
+        sb.append(th("유형", "5%"));
+        sb.append(th("제목", "20%"));
+        sb.append(th("상태", "5%"));
+        sb.append(th("담당자", "6%"));
+        sb.append(th("업무파트", "5%"));
+        sb.append(th("ITSM CSD", "8%"));
+        sb.append(th("내용(요약)", null)); // 마지막은 폭 가변이면 null
 
         for (IssueHistory ih : matched) {
             sb.append("|-\n");
@@ -160,7 +169,7 @@ public class WikiRenderService {
             sb.append("| ").append(escape(nz(ih.getIssueOwner()))).append("\n");
             sb.append("| ").append(escape(nz(ih.getWorkPart()))).append("\n");
             sb.append("| ").append(escape(nz(ih.getItsmCsdNo()))).append("\n");
-            sb.append("| ").append(escape(summary(nz(ih.getContent()), 400))).append("\n");
+            sb.append("| ").append(escape(summary(nz(ih.getContent()), 650))).append("\n");
         }
 
         sb.append("|}\n");
