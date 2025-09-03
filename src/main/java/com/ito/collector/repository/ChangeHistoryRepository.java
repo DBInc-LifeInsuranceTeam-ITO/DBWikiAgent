@@ -8,5 +8,7 @@ import java.util.List;
 
 @Repository
 public interface ChangeHistoryRepository extends JpaRepository<ChangeHistory, String> {
-    List<ChangeHistory> findByCiNm(String cinm); // 특정 hostname의 변경이력 목록 조회
+
+    /** hostname 기준으로 변경이력 조회 (최신 요청일자 우선) */
+    List<ChangeHistory> findByHostnameOrderByReqDtDesc(String hostname);
 }
