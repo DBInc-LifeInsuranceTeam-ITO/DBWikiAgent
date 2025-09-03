@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -21,6 +20,7 @@ public class WikiRenderService {
 
     /**
      * 단일 호스트 위키 페이지 풀 렌더링
+     * 순서: 자산 요약 → (구분선) 변경 이력 → 운영 이슈 → 참고사항(맨 아래)
      */
     public String renderFullContent(String hostname) {
         // 1) CMDB 자산 정보
@@ -30,17 +30,22 @@ public class WikiRenderService {
         // 2) 서버 변경 이력
         String changeBlock = changeHistoryService.buildChangeHistoryBlock(hostname);
 
-        // 3) (신규) 운영 이슈 블럭: "서버 변경 내역" 바로 아래에 붙임
+        // 3) 운영 이슈 블록
         String opsIssueBlock = buildOpsIssuesBlock(hostname);
 
-        // 4) 전체 병합
-        //    변경 내역 아래에 운영 이슈를 두고, 마지막에 카테고리(자산 표에서 내려받은 workCategory)를 붙이고 싶다면
-        //    assetBlock 안에 이미 포함된 카테고리가 있다면 중복되지 않도록 조정하세요.
-        return assetBlock + "\n\n----\n\n" + changeBlock + "\n\n" + opsIssueBlock;
+        // 4) 참고사항(맨 아래)
+        String referenceBlock = buildReferenceNotesBlock();
+
+        // 합치기
+        return assetBlock
+                + "\n\n----\n\n" + changeBlock
+                + "\n\n" + opsIssueBlock
+                + "\n\n" + referenceBlock;
     }
 
     /**
      * 자산 요약 테이블
+     * (여기에서 '📎 참고사항' 섹션은 제거되었고, 맨 아래에서 별도 블록으로 붙임)
      */
     private String buildAssetTable(CmdbAsset asset) {
         return """
@@ -85,15 +90,8 @@ public class WikiRenderService {
                 
                 == <span id="개요">📘 개요</span> ==
                 <div style="margin: 0.5em 0 1.5em 0; font-size: 100%%;">
-                <b style="color: #005bac;">%s</b> 서버는 <b style="color: #1a4d1a;">%s</b> 업무를 수행하는 시스템입니다.  
-                관리자는 정기적으로 상태를 점검해 주세요. 🔍
+                * <b style="color: #005bac;">%s</b> 서버는 <b style="color: #1a4d1a;">%s</b> 업무를 수행하는 시스템입니다.<br/>          
                 </div>
-               
-                
-                == <span id="기타 참고사항">📎 참고사항</span> ==
-                * 위 정보는 최신 DB 기준 자동 생성된 내용입니다.  
-                * 변경사항 발생 시 데이터센터 담당자에게 문의 바랍니다. 📬
-                
                 
                 """.formatted(
                 safe(asset.getHostname()),
@@ -110,10 +108,20 @@ public class WikiRenderService {
     }
 
     /**
+     * (맨 아래로 내린) 참고사항 섹션
+     */
+    private String buildReferenceNotesBlock() {
+        return """
+                == <span id="기타 참고사항">📎 참고사항</span> ==
+                * 위 정보는 최신 DB 기준 자동 생성된 내용입니다.  
+                * 변경사항 발생 시 데이터센터 담당자에게 문의 바랍니다. 📬
+                """;
+    }
+
+    /**
      * (신규) 운영 이슈 블록: targetServers가 콤마(,)로 구분된 서버 목록.
      * 현재 hostname이 포함된 이슈만 표로 노출.
      */
-
     private static final String TH_BASE_STYLE = "background-color:#2E75B6; color:white; padding:6px;";
 
     // width%와 라벨을 받아 MediaWiki 헤더 셀을 만들어줌

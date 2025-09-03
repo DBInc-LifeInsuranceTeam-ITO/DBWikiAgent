@@ -4,7 +4,6 @@ import com.ito.collector.entity.ChangeHistory;
 import com.ito.collector.repository.ChangeHistoryRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,52 +12,61 @@ public class ChangeHistoryService {
 
     private final ChangeHistoryRepository changeHistoryRepository;
 
-
     public ChangeHistoryService(ChangeHistoryRepository changeHistoryRepository) {
         this.changeHistoryRepository = changeHistoryRepository;
     }
 
+    /**
+     * CI 이름을 기준으로 변경 이력 위키 블록 생성 (셀 크기 조절 버전)
+     */
     public String buildChangeHistoryBlock(String cinm) {
-        // CI 이름을 기준으로 변경 이력 목록 가져오기
         List<ChangeHistory> historyList = changeHistoryRepository.findByCiNm(cinm);
 
         if (historyList.isEmpty()) {
-            return "== 변경이력 ==\n- 등록된 변경 이력이 없습니다.";
+            return "== 📝 변경이력 ==\n* 등록된 변경 이력이 없습니다.";
         }
 
         StringBuilder sb = new StringBuilder();
-        sb.append("== 변경이력 ==\n");
+        sb.append("== 📝 변경이력 ==\n");
 
-        // 날짜 포맷 정의
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-
-        // 변경 이력 테이블 헤더
-        sb.append("{| class=\"wikitable\" style=\"width: 100%; font-size: 85%; border: 1px solid #ddd; border-collapse: collapse;\"\n");
+        // 테이블 헤더 (각 열 크기 지정)
+        sb.append("{| class=\"wikitable\" style=\"width:100%; font-size:85%;\"\n");
         sb.append("|-\n");
-        sb.append("! style=\"background-color: #2E75B6, color:white;\" | 요청 번호\n");
-        sb.append("! style=\"background-color: #2E75B6, color:white;\" | 요청 제목\n");
-        sb.append("! style=\"background-color: #2E75B6, color:white;\" | 요청 내용\n");
-        sb.append("! style=\"background-color: #2E75B6, color:white;\" | 요청 날짜\n");  // 요청 날짜 추가
-        sb.append("|-\n");
+        sb.append("! style=\"width:10%;\" | 요청 번호\n");
+        sb.append("! style=\"width:30%;\" | 요청 제목\n");
+        sb.append("! style=\"width:51%;\" | 요청 내용\n");
+        sb.append("! style=\"width:9%;\" | 요청 날짜\n");
 
-        // 변경 이력 항목을 테이블로 추가
+        // 데이터 행
         for (ChangeHistory history : historyList) {
-            String reqNo = Optional.ofNullable(history.getReqNo()).orElse("N/A");  // null 처리
-            String reqTitle = Optional.ofNullable(history.getReqTitle()).orElse("No Title");  // null 처리
-            String reqDesc = Optional.ofNullable(history.getReqDesc()).orElse("Unknown");  // null 처리
-            String reqDt = Optional.ofNullable(history.getReqDt()).orElse("UnKnown");
-            // 테이블 행 추가
-            sb.append(String.format("| %s || %s || %s || %s\n",
-                    reqNo,          // 요청 번호
-                    reqTitle,       // 요청 제목
-                    reqDesc,
-                    reqDt
-            ));
+            String reqNo    = Optional.ofNullable(history.getReqNo()).orElse("-");
+            String reqTitle = Optional.ofNullable(history.getReqTitle()).orElse("-");
+            String reqDesc  = Optional.ofNullable(history.getReqDesc()).orElse("-");
+            String reqDt    = Optional.ofNullable(history.getReqDt()).orElse("-");
+
+            reqDesc = escapeForWiki(reqDesc);
+
             sb.append("|-\n");
+            sb.append(String.format(
+                    "| style=\"width:10%%;\" | %s || style=\"width:30%%;\" | %s || style=\"width:51%%; font-size:95%%;\" | %s || style=\"width:9%%;\" | %s\n",
+                    reqNo, reqTitle, reqDesc, reqDt
+            ));
         }
 
-        sb.append("|}\n"); // 테이블 끝
-
+        sb.append("|}\n");
         return sb.toString();
+    }
+
+    /**
+     * MediaWiki 안전 문자열 변환
+     */
+    private String escapeForWiki(String s) {
+        if (s == null) return "";
+        return s
+                .replace("|", "&#124;")
+                .replace("\r\n", "\n")
+                .replace("\r", "\n")
+                .replace("\n", "<br/>")
+                .trim();
     }
 }
