@@ -2,45 +2,41 @@ package com.ito.collector.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
-@Table(name = "change_history")
+@Table(name = "itsm_csd")
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @ToString
 public class ChangeHistory {
 
     @Id
-    private String reqNo;        // ITSM 번호
-    private String ciNm;         // CI 이름
-    private String reqTitle;     // 요청 제목
-    private String reqPerId;     // 요청자 ID
-    private String reqDesc;      // 요청 설명
-    private String reqPerson;    // 요청자
+    @Column(name = "req_no", nullable = false, length = 50)
+    private String reqNo;
 
+    @Column(name = "hostname", length = 100)
+    private String hostname;
 
-    public ChangeHistory(String reqNo, String ciNm, String reqTitle, String reqPerId, String reqDesc, String reqPerson) {
-        this.reqNo = reqNo;
-        this.ciNm = ciNm;
-        this.reqTitle = reqTitle;
-        this.reqPerId = reqPerId;
-        this.reqDesc = reqDesc;
-        this.reqPerson = reqPerson;
-    }
-    // Getter & Setter
-    public String getReqNo() { return reqNo; }
-    public void setReqNo(String reqNo) { this.reqNo = reqNo; }
-    public String getCiNm() { return ciNm; }
-    public void setCiNm(String ciNm) { this.ciNm = ciNm; }
-    public String getReqTitle() { return reqTitle; }
-    public void setReqTitle(String reqTitle) { this.reqTitle = reqTitle; }
-    public String getReqPerId() { return reqPerId; }
-    public void setReqPerId(String reqPerId) { this.reqPerId = reqPerId; }
-    public String getReqDesc() { return reqDesc; }
-    public void setReqDesc(String reqDesc) { this.reqDesc = reqDesc; }
-    public String getReqPerson() { return reqPerson; }
-    public void setReqPerson(String reqPerson) { this.reqPerson = reqPerson; }
+    /** 요청 제목: PostgreSQL text → String으로! (CLOB 아님) */
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)       // getString()으로 읽히게 유도
+    @Column(name = "req_title", columnDefinition = "text")
+    private String reqTitle;
+
+    /** 요청 설명: PostgreSQL text → String으로! (CLOB 아님) */
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)       // getString()으로 읽히게 유도
+    @Column(name = "req_desc", columnDefinition = "text")
+    private String reqDesc;
+
+    @Column(name = "req_dt")
+    private LocalDate reqDt;
+
+    @Column(name = "ci_nm", length = 200)
+    private String ciNm;
 }
