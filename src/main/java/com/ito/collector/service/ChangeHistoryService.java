@@ -40,8 +40,8 @@ public class ChangeHistoryService {
         sb.append("|-\n");
         sb.append("! style=\"").append(TH_BASE_STYLE).append(" width:10%;\" | 요청 번호\n");
         sb.append("! style=\"").append(TH_BASE_STYLE).append(" width:30%; text-align:left;\" | 요청 제목\n");
-        sb.append("! style=\"").append(TH_BASE_STYLE).append(" width:51%; text-align:left;\" | 요청 설명\n");
-        sb.append("! style=\"").append(TH_BASE_STYLE).append(" width:9%;\"  | 요청 날짜\n");
+        sb.append("! style=\"").append(TH_BASE_STYLE).append(" width:50%; text-align:left;\" | 요청 설명\n");
+        sb.append("! style=\"").append(TH_BASE_STYLE).append(" width:10%;\"  | 요청 날짜\n");
 
         boolean odd = true;
         for (ChangeHistory h : historyList) {
