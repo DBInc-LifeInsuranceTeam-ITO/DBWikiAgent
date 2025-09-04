@@ -38,7 +38,7 @@ public class ChangeHistoryService {
         // 테이블 헤더
         sb.append("{| class=\"wikitable\" style=\"").append(TABLE_STYLE).append("\"\n");
         sb.append("|-\n");
-        sb.append("! style=\"").append(TH_BASE_STYLE).append(" width:10%;\" | 요청 번호\n");
+        sb.append("! style=\"").append(TH_BASE_STYLE).append(" width:10%;\" | ITSM CSD\n");
         sb.append("! style=\"").append(TH_BASE_STYLE).append(" width:30%;\" | 요청 제목\n");
         sb.append("! style=\"").append(TH_BASE_STYLE).append(" width:50%;\" | 요청 설명\n");
         sb.append("! style=\"").append(TH_BASE_STYLE).append(" width:11%;\"  | 요청 날짜\n");
