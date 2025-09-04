@@ -1,5 +1,6 @@
 package com.ito.collector.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -19,9 +20,11 @@ public class CmdbAsset {
     private String mwManager;
     private String workCategory;
 
+    @Column(name = "env_type", length = 20)
+    private String envType;
+
     // 기본 생성자
     public CmdbAsset() {}
-
 
     public CmdbAsset(String ip, String hostname, String cpu, String mem, String disk, String workType, String workCategory, String vip) {
         this.hostname = hostname;
@@ -35,21 +38,32 @@ public class CmdbAsset {
 
     // Getter & Setter
     public String getIp() { return ip; }
-    public void setVip(String vip) { this.vip = vip; }
-    public String getVip() { return vip; }
     public void setIp(String ip) { this.ip = ip; }
+
+    public String getVip() { return vip; }
+    public void setVip(String vip) { this.vip = vip; }
+
     public String getHostname() { return hostname; }
     public void setHostname(String hostname) { this.hostname = hostname; }
+
     public String getCpu() { return cpu; }
     public void setCpu(String cpu) { this.cpu = cpu; }
+
     public String getMem() { return mem; }
     public void setMem(String mem) { this.mem = mem; }
+
     public String getWorkType() { return workType; }
     public void setWorkType(String workType) { this.workType = workType; }
+
     public String getOsManager() { return osManager; }
     public void setOsManager(String osManager) { this.osManager = osManager; }
+
     public String getMwManager() { return mwManager; }
     public void setMwManager(String mwManager) { this.mwManager = mwManager; }
+
     public String getWorkCategory() { return workCategory; }
     public void setWorkCategory(String workCategory) { this.workCategory = workCategory; }
+
+    public String getEnvType() { return envType; }
+    public void setEnvType(String envType) { this.envType = envType; }
 }

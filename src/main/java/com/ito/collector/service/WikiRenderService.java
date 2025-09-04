@@ -56,7 +56,7 @@ public class WikiRenderService {
                 
                     <div style="width: 300px; flex-shrink: 0; margin-left: auto; border: 2px solid #bbb; border-radius: 10px; padding: 12px; background-color: #f0f8ff;">
                     {| class="wikitable" style="width: 100%%; font-size: 90%%;"
-                     |+ <b style="font-size: 110%%; color: #005bac;">🔧 상세 정보</b>
+                     |+ <b style="font-size: 110%%; color: #005bac;">상세 정보</b>
                      |-
                      ! style="width: 40%%; background-color: #e6f2ff;" | 항목 🏷
                      ! style="background-color: #e6f2ff;" | 내용 📋
@@ -67,10 +67,13 @@ public class WikiRenderService {
                      | '''🌐 IP'''
                      | <code>%s</code>
                      |-
+                     | '''📎 운영구분'''          
+                     | <span style="color: #444;">%s</span>
+                     |-
                      | '''🗂️ 업무분류'''
                      | <span style="color: #444;">%s</span>
                      |-
-                     | '''🏢 업무계'''
+                     | '''🏢 업무시스템'''
                      | <span style="color: #1a4d1a; font-weight: bold;">%s</span>
                      |-
                      | '''⚙️ CPU'''
@@ -96,6 +99,7 @@ public class WikiRenderService {
                 """.formatted(
                 safe(asset.getHostname()),
                 safe(asset.getIp()),
+                safe(asset.getEnvType()),
                 safe(asset.getWorkCategory()),
                 safe(asset.getWorkType()),
                 safe(asset.getCpu()),
