@@ -24,7 +24,7 @@ public class IssueHistoryService {
     private final IssueHistoryRepository issueHistoryRepository;
 
     @PersistenceContext
-    private EntityManager em;   // ✅ 추가
+    private EntityManager em;   
 
     private static final String EXCEL_PATH = "C:\\Users\\Administrator\\Desktop\\project\\wiki\\DBWikiAgent\\src\\main\\resources\\server_issue.xlsx";
     private static final String SHEET_NAME = "2025";
@@ -51,7 +51,7 @@ public class IssueHistoryService {
             return 0;
         }
 
-        // 🔴 0) 테이블 초기화: TRUNCATE(권장) → 실패 시 deleteAllInBatch 폴백
+        
         clearTable();
 
         int inserted = 0;
@@ -218,8 +218,8 @@ public class IssueHistoryService {
         }
     }
 
-    /** 원본(가공 전) 값 확인용 */
-    private static String nullSafeRaw(Cell cell) {
+    /** 사용안함 */
+/*   private static String nullSafeRaw(Cell cell) {
         if (cell == null) return "";
         try {
             return switch (cell.getCellType()) {
@@ -236,7 +236,7 @@ public class IssueHistoryService {
             return "ERR:" + e.getMessage();
         }
     }
-
+*/
     private static boolean isBlank(String s) {
         return s == null || s.trim().isEmpty();
     }

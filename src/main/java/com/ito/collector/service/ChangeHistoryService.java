@@ -73,12 +73,12 @@ public String buildChangeHistoryBlock(String hostname) {
                 .trim();
     }
 
-    /** 긴 공백/개행을 단일 공백으로 축약 */
-    private String collapseWhitespace(String s) {
+    /** 사용안함 */
+/*    private String collapseWhitespace(String s) {
         if (s == null) return "";
         return s.replaceAll("\\s+", " ");
     }
-
+*/
     /** LocalDate → 표시 문자열 */
     private String formatDate(LocalDate d) {
         return (d == null) ? "-" : d.format(DTF);
